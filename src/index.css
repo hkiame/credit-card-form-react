@@ -1,13 +1,91 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+#app{
+  color:#202945;
+}
+.card-input-icon {
+  right: 1rem;
+  top: 2.5rem;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.card-input-icon-err {
+  right: 2.5rem;
+  top: 2.5rem;
+}
+
+.cvvtooltip{
+  position:relative;
+}
+
+.cvvtooltip::before,
+.cvvtooltip::after {
+  --scale: 0;
+  --tooltip-color: #202945;
+  --arrow-size: 10px;
+  position: absolute;
+  top: -.25rem;
+  left: 50%;
+  transform: translate(-50%, var(--translate-y, 0)) scale(var(--scale));
+  transition: 150ms transform;
+  transform-origin: bottom center;
+}
+
+.cvvtooltip::before {
+  --translate-y: calc(-100% - var(--arrow-size));
+  content: attr(data-cvv-tooltip);
+  background: var(--tooltip-color);
+  padding: .5rem;
+  width: 200px;
+  border-radius: .3rem;
+  text-align: left;
+  font-style: normal;
+  font-weight: 400;
+  font-size:14px;
+  padding:10px;
+  color: white;
+
+}
+
+.cvvtooltip:hover::before,
+.cvvtooltip:hover::after {
+  --scale: 1;
+}
+.cvvtooltip::after {
+  --translate-y: calc(-1 * var(--arrow-size));
+  content: '';
+  border: var(--arrow-size) solid transparent;
+  border-top-color: var(--tooltip-color);
+  transform-origin: top center;
+
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #202945;
+  box-shadow: 0 0 0 0.25rem rgb(32, 41, 69, 0.25);
+}
+
+select.decorated option:checked,
+select option:hover {
+  box-shadow: 0 0 10px 100px #202945 inset;
+}
+
+.card-img {
+  width:55px;
+}
+
+.mr-auto{
+  margin-right:auto;
+}
+
+@media screen and (max-width: 600px) {
+  .w-75 {
+    width:95% !important;
+  }
+
+  .card-img {
+    width:50px;
+    margin-top:10px;
+    margin-bottom:10px;
+  }
+  #expiry-date{
+    flex: 1;
+  }
 }
