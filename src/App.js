@@ -9,14 +9,14 @@ function App() {
     msg: ''
   });
 
-  let notificationClassName = "container mt-2";
+  let notificationClassName = `w-75 mx-auto notification text-center m-3 alert alert-dismissible fade show ${notification.success ? "alert-success": "alert-danger"}`;
 
   return (
-    <div className="app" className="">
+    <div id="app" className="container mt-2">
       {
         notification.display ? <div id="notification" className={notificationClassName}></div> : <div className="notification"></div>
       }
-      <CreditCardForm />
+      <CreditCardForm setNotification={setNotification}/>
     </div>
   );
 }
