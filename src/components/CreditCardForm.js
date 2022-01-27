@@ -2,20 +2,11 @@ import {useEffect, useState} from "react";
 import Image from "./Image";
 import {CgAsterisk} from "react-icons/cg";
 import {BsFillCreditCard2FrontFill} from "react-icons/bs";
+import {VscQuestion} from "react-icons/vsc";
 
 
 const handleSubmit = e => {
     e.preventDefault();
-};
-
-const monthsOptions = () => {
-    const options = [];
-
-    for(let i = 1; i <= 12; ++i){
-        options.push(<option key={i} value={i}>{i}</option>)
-    }
-
-    return options;
 };
 
 const CreditCardForm = ({setNotification}) => {
@@ -26,6 +17,8 @@ const CreditCardForm = ({setNotification}) => {
         prefix: ''
     }];
 
+    let year = (new Date()).getFullYear();
+
     let [cards, setCards] = useState(initCards);
     let [cardOrg, setCardOrg] = useState("");
 
@@ -34,6 +27,28 @@ const CreditCardForm = ({setNotification}) => {
             .then(res => res.json())
             .then(cards => setCards(cards));
     }, [cards]);
+
+    const monthsOptions = () => {
+        const options = [];
+    
+        for(let i = 1; i <= 12; ++i){
+            options.push(<option key={i} value={i}>{i}</option>)
+        }
+    
+        return options;
+    };
+    
+    const yearOptions = (year) => {
+        const options = [];
+    
+        for(let i = 0; i <= 5; ++i){
+            let yearValue = year + i;
+            options.push(<option key={i} value={yearValue}>{yearValue}</option>);
+        }
+    
+        return options;
+    
+    };
 
     return (
         <div className="mt-2">
@@ -77,7 +92,31 @@ const CreditCardForm = ({setNotification}) => {
                                 </select>
                                 <div className="invalid-feedback"></div>
                             </div>
+                            <div className="">
+                                <label htmlFor="" className="form-label invisible">
+                                    Expiration Date <CgAsterisk className="text-danger mb-2" />
+                                </label>
+                                <select id="expiry-year" name="expiry-year" className="form-select form-select-lg mb-3">
+                                    {yearOptions(year)}
+                                </select>
+                                <div className="invalid-feedback"></div>
+                            </div>
                         </div>
+                        <div className="col-10 col-sm-4 input-group-lg">
+                            <label htmlFor="cvv" className="form-label">
+                                Security Code <CgAsterisk className="text-danger mb-2"/>
+                            </label>
+                            <div className="d-flex has-validation">
+                                <input type="tel" name="cvv" id="cvv" placeholder="cvv" value="" className="form-control form-control-lg"/>
+                                <span className="cvvtooltip mx-1 align-self-center" data-cvv-tooltip="cvv is a three to four digit number on the back of your card">
+                                    <VscQuestion className="fs-4" id="cvvtooltip-icon"/>
+                                </span>
+                            </div>
+                            <div className="w-100 mt-1 mb-3 text-danger"></div>
+                        </div>
+                    </div>
+                    <div className="d-grid gap-2 my-2">
+                        <button type="submit" className="btn btn-warning btn-lg rounded-pill p-2">Add Card</button>
                     </div>
                 </form>
             </div>
