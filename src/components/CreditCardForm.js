@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useRef, useEffect, useState} from "react";
 import Image from "./Image";
 import {CgAsterisk} from "react-icons/cg";
 import {BsFillCreditCard2FrontFill} from "react-icons/bs";
@@ -10,23 +10,23 @@ const handleSubmit = e => {
 };
 
 const CreditCardForm = ({setNotification}) => {
-    const initCards =[{
-        id: 0,
-        name: '',
-        url: '',
-        prefix: ''
-    }];
+    const [cards, setCards] = useState([]);
+    const [cardOrg, setCardOrg] = useState("");
+    const fetchCards = useRef(() => {});
+    const [cardName, setCardName] = useState("");
+    const [cardNumber, setCardNumber] = useState("");
+    const [cardExpiryMonth, setCardExpiryMonth] = useState("");
+    const [cardExpiryYear, setCardExpiryYear] = useState("");
+    const [cardCVV, setCardCVV] = useState("");
 
-    let year = (new Date()).getFullYear();
-
-    let [cards, setCards] = useState(initCards);
-    let [cardOrg, setCardOrg] = useState("");
-
-    useEffect(() => {
+    fetchCards.current = () => {
         fetch("./data.json")
             .then(res => res.json())
             .then(cards => setCards(cards));
-    }, [cards]);
+    };
+
+    useEffect(() => fetchCards.current(), []);
+    let year = (new Date()).getFullYear();
 
     const monthsOptions = () => {
         const options = [];
@@ -50,6 +50,26 @@ const CreditCardForm = ({setNotification}) => {
     
     };
 
+    const setFormCardName = ({target}) => {
+        setCardName(target.value);
+    };
+
+    const setFormCardNumber = ({target}) => {
+        setCardNumber(target.value);
+    };
+
+    const setFormCardExpiryMonth = ({target}) => {
+        setCardExpiryMonth(target.value);
+    };
+
+    const setFormCardExpiryYear = ({target}) => {
+        setCardExpiryYear(target.value);
+    };
+
+    const setFormCardCVV = ({target}) => {
+        setCardCVV(target.value);
+    };
+
     return (
         <div className="mt-2">
             <div id="form-wrapper" className="">
@@ -62,12 +82,12 @@ const CreditCardForm = ({setNotification}) => {
                     })}
                 </div>
                 <form action="" className="w-75 mx-auto" onSubmit={handleSubmit}>
-                    <div class="mb-3 input-group-lg">
+                    <div className="mb-3 input-group-lg">
                         <label htmlFor="card-name" className="form-label">
                             Name on Card <CgAsterisk className="text-danger mb-2" />
                         </label>
                         <div className="has-validation">
-                            <input id="card-name" type="text" className="form-control" name="name" value="" />
+                            <input id="card-name" type="text" className="form-control" name="name" value={cardName} onChange={setFormCardName}/>
                             <div className="invalid-feedback"></div>
                         </div>
                     </div>
@@ -77,7 +97,7 @@ const CreditCardForm = ({setNotification}) => {
                         </label>
                         <div className="has-validation">
                             <input id="card-number" type="tel" className="form-control" />
-                            <BsFillCreditCard2FrontFill className="position-absolute fs-2 card-input-icon" />
+                            <BsFillCreditCard2FrontFill className="position-absolute fs-2 card-input-icon" value={cardNumber} onChange={setFormCardNumber} />
                             <div className="invalid-feedback"></div>
                         </div>
                     </div>
@@ -87,7 +107,8 @@ const CreditCardForm = ({setNotification}) => {
                                 <label htmlFor="" className="form-label">
                                     Expiration Date <CgAsterisk className="text-danger mb-2" />
                                 </label>
-                                <select name="expiry-month" id="expire-month" className="form-select form-select-lg mb-3">
+                                <select name="expiry-month" id="expire-month" className="form-select form-select-lg mb-3" value={cardExpiryMonth} 
+                                onChange={setFormCardExpiryMonth}>
                                     {monthsOptions()}
                                 </select>
                                 <div className="invalid-feedback"></div>
@@ -96,7 +117,8 @@ const CreditCardForm = ({setNotification}) => {
                                 <label htmlFor="" className="form-label invisible">
                                     Expiration Date <CgAsterisk className="text-danger mb-2" />
                                 </label>
-                                <select id="expiry-year" name="expiry-year" className="form-select form-select-lg mb-3">
+                                <select id="expiry-year" name="expiry-year" className="form-select form-select-lg mb-3" value={cardExpiryYear} 
+                                onChange={setFormCardExpiryYear}>
                                     {yearOptions(year)}
                                 </select>
                                 <div className="invalid-feedback"></div>
@@ -107,7 +129,8 @@ const CreditCardForm = ({setNotification}) => {
                                 Security Code <CgAsterisk className="text-danger mb-2"/>
                             </label>
                             <div className="d-flex has-validation">
-                                <input type="tel" name="cvv" id="cvv" placeholder="cvv" value="" className="form-control form-control-lg"/>
+                                <input type="tel" name="cvv" id="cvv" placeholder="cvv" value="" className="form-control form-control-lg"
+                                value={cardCVV} onChange={setFormCardCVV}/>
                                 <span className="cvvtooltip mx-1 align-self-center" data-cvv-tooltip="cvv is a three to four digit number on the back of your card">
                                     <VscQuestion className="fs-4" id="cvvtooltip-icon"/>
                                 </span>
