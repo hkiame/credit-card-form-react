@@ -7,4 +7,10 @@ It includes:
 - validation
 - automatic card-type detection
 
+### Dependencies
+1. JSON server was used to simulate request to server. 
+```
+    npx json-server --watch data/data.json --port 4000 
+```
+
 ## Currently under construction
