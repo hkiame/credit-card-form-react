@@ -1,0 +1,22 @@
+{
+  "cards": [
+      {
+        "id": "1",
+        "name": "Visa",
+        "url": "./images/visa_card.jpg",
+        "prefix": [4]
+      },
+      {
+        "id": "2",
+        "name": "MasterCard",
+        "url": "./images/mastercard_logo.jpg",
+        "prefix": [51, 52, 53, 54, 55]
+      },
+      {
+        "id": "3",
+        "name": "American Express",
+        "url": "./images/american-express.png",
+        "prefix": [34, 37]
+      }
+  ]
+}

@@ -14,9 +14,9 @@ function App() {
   return (
     <div id="app" className="container mt-2">
       {
-        notification.display ? <div id="notification" className={notificationClassName}></div> : <div className="notification"></div>
+        notification.display ? <div id="notification" className={notificationClassName}>{notification.msg}</div> : <div className="notification"></div>
       }
-      <CreditCardForm setNotification={setNotification}/>
+      <CreditCardForm setNotification={setNotification} />
     </div>
   );
 }
