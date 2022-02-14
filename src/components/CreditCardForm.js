@@ -3,6 +3,7 @@ import Image from "./Image";
 import {CgAsterisk} from "react-icons/cg";
 import {BsFillCreditCard2FrontFill} from "react-icons/bs";
 import {VscQuestion} from "react-icons/vsc";
+import useFetch from "./useFetch";
 
 
 const handleSubmit = e => {
@@ -10,36 +11,31 @@ const handleSubmit = e => {
 };
 
 const CreditCardForm = ({setNotification}) => {
-    const [cards, setCards] = useState([]);
     const [cardOrg, setCardOrg] = useState("");
     const [cardName, setCardName] = useState("");
     const [cardNumber, setCardNumber] = useState("");
     const [cardExpiryMonth, setCardExpiryMonth] = useState("");
     const [cardExpiryYear, setCardExpiryYear] = useState("");
     const [cardCVV, setCardCVV] = useState("");
+    const {data:cards, isLoading, error:fetchCardsError} = useFetch("http://localhost:4000/cards");
 
-    const fetchCards = async () => {
-        const response = await fetch("http://localhost:4000/cards")
-
-        if(!response.ok){
-            const msg = `Failed to fetch data: ${response.status}`;
-            throw new Error(msg);
-        }
-
-        const cards = await response.json();
-        setCards(cards);
-    };
-
-    useEffect(() => { 
-        fetchCards()
-            .catch(err => {
-                setNotification({
-                    display: true,
-                    success: false,
-                    msg: err.message
-                });
+    useEffect(() => {
+        if(fetchCardsError != null){
+            setNotification({
+                display: true,
+                success: false,
+                msg: fetchCardsError
             });
-    }, [setNotification]);
+        }else{
+            setNotification({
+                display: false,
+                success: true,
+                msg: ''
+            });
+        }
+    }, [fetchCardsError]);
+
+    
     let year = (new Date()).getFullYear();
 
     const monthsOptions = () => {
@@ -64,12 +60,46 @@ const CreditCardForm = ({setNotification}) => {
     
     };
 
+    const creditCardNumFormat = (num) => {
+        let clean = num.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        const matches = clean.match(/\d{4,16}/g);
+        const match = (matches && matches[0]) ?? '';
+        const parts = [];
+        let len = match.length;
+        if(clean && (clean.length >= 1)){ 
+            for(let card of cards){
+                if(card.prefix.includes(Number(clean.substring(0, 1)))){
+                    setCardOrg(card.name);
+                    break;
+                }else if(card.prefix.includes(Number(clean.substring(0, 2)))){
+                    setCardOrg(card.name);
+                    break;
+                }else{
+                    setCardOrg("");
+                }
+            }
+        }else if(clean.length === 0){
+            setCardOrg("");
+        }
+    
+        for (let i = 0; i < len; i += 4) {
+            parts.push(match.substring(i, i + 4));
+        }
+    
+        if (parts.length) {
+            return parts.join(' ');
+        } 
+
+        return clean;
+
+    };
+
     const setFormCardName = ({target}) => {
         setCardName(target.value);
     };
 
     const setFormCardNumber = ({target}) => {
-        setCardNumber(target.value);
+        setCardNumber(creditCardNumFormat(target.value));
     };
 
     const setFormCardExpiryMonth = ({target}) => {
@@ -89,6 +119,7 @@ const CreditCardForm = ({setNotification}) => {
             <div id="form-wrapper" className="animate__animated animate__zoomIn">
                 <h2 className="text-center my-3 fs-1">Add Credit Card Details</h2>
                 <div className="w-75 mx-auto my-3 d-flex justify-content-end">
+                    {isLoading && <div>Loading images...</div>}
                     {cards.map(card => {
                         return (
                             <Image card={card} key={card.id} orgName={cardOrg} />
@@ -110,8 +141,9 @@ const CreditCardForm = ({setNotification}) => {
                             Card Number <CgAsterisk className="text-danger mb-2"/>
                         </label>
                         <div className="has-validation">
-                            <input id="card-number" type="tel" className="form-control" />
-                            <BsFillCreditCard2FrontFill className="position-absolute fs-2 card-input-icon" value={cardNumber} onChange={setFormCardNumber} />
+                            <input id="card-number" type="tel" className="form-control" 
+                            value={cardNumber} onChange={setFormCardNumber}/>
+                            <BsFillCreditCard2FrontFill className="position-absolute fs-2 card-input-icon" />
                             <div className="invalid-feedback"></div>
                         </div>
                     </div>
