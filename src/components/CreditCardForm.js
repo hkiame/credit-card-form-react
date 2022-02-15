@@ -1,14 +1,9 @@
-import {useEffect, useState} from "react";
+import {useRef, useEffect, useState} from "react";
 import Image from "./Image";
 import {CgAsterisk} from "react-icons/cg";
 import {BsFillCreditCard2FrontFill} from "react-icons/bs";
 import {VscQuestion} from "react-icons/vsc";
 import useFetch from "./useFetch";
-
-
-const handleSubmit = e => {
-    e.preventDefault();
-};
 
 const CreditCardForm = ({setNotification}) => {
     const [cardOrg, setCardOrg] = useState("");
@@ -17,7 +12,17 @@ const CreditCardForm = ({setNotification}) => {
     const [cardExpiryMonth, setCardExpiryMonth] = useState("");
     const [cardExpiryYear, setCardExpiryYear] = useState("");
     const [cardCVV, setCardCVV] = useState("");
-    const {data:cards, isLoading, error:fetchCardsError} = useFetch("http://localhost:4000/cards");
+    const [formErrors, setFormErrors] = useState({
+        name: '',
+        number: '',
+        expiryMonth: '',
+        expiryYear: '',
+        cvv: '' 
+    });
+    const [submit, setSubmit] = useState(false);
+    const {data:cards, isLoading, error:fetchCardsError} = useFetch("http://localhost:4000/cards"); 
+    const count = useRef(0);
+
 
     useEffect(() => {
         if(fetchCardsError != null){
@@ -35,11 +40,81 @@ const CreditCardForm = ({setNotification}) => {
         }
     }, [fetchCardsError]);
 
+    useEffect(() => {
+
+        if(!submit){
+            return;
+        }
+        count.current += 1;
+        setSubmit(false);
+
+        for(let prop in formErrors){
+            if(formErrors[prop] !== ''){
+                return;
+            }
+        }
+
+        setFormErrors({
+            name: '',
+            number: '',
+            expiryMonth: '',
+            expiryYear: '',
+            cvv: '' 
+        });
+
+        setNotification({
+            display: true,
+            success: true,
+            msg: "Credit Card was successfully added."
+        });
+
+        count.current = 0;
+
+        setCardName('');
+        setCardNumber('');
+        setCardExpiryMonth('');
+        setCardExpiryYear('');
+        setCardCVV('');
+
+    }, [submit]);
+
+    useEffect(() => {
+        if(count.current){
+            validateCardName(cardName);
+        }
+        
+    }, [cardName]);
+
+    useEffect(() => {
+        if(count.current){
+            validateCardNumber(cardNumber);
+        }
+        
+    }, [cardNumber]);
+
+    useEffect(() => {
+        if(count.current){
+            validateCardExpiryMonth(cardExpiryMonth);
+        }
+    }, [cardExpiryMonth]);
+
+    useEffect(() => {
+        if(count.current){
+            validateCardExpiryYear(cardExpiryYear);
+        }
+    }, [cardExpiryYear]);
+
+    useEffect(() => {
+        if(count.current){
+            validateCardCVV(cardCVV);
+        }
+    }, [cardCVV]);
+
     
     let year = (new Date()).getFullYear();
 
     const monthsOptions = () => {
-        const options = [];
+        const options = [<option key="0" value="month">Month</option>];
     
         for(let i = 1; i <= 12; ++i){
             options.push(<option key={i} value={i}>{i}</option>)
@@ -49,9 +124,9 @@ const CreditCardForm = ({setNotification}) => {
     };
     
     const yearOptions = (year) => {
-        const options = [];
+        const options = [<option key="0" value="year">Year</option>];
     
-        for(let i = 0; i <= 5; ++i){
+        for(let i = 1; i <= 5; ++i){
             let yearValue = year + i;
             options.push(<option key={i} value={yearValue}>{yearValue}</option>);
         }
@@ -114,6 +189,131 @@ const CreditCardForm = ({setNotification}) => {
         setCardCVV(target.value);
     };
 
+    const hansLuhnAlgo = val => {
+        val = val.replace(/\s+/g, '');
+        if (!/^[0-9]{13,19}$/.test(val)){
+            return false;
+        }
+        let checksum = 0; 
+        let j = 1; 
+
+        for(let i = val.length - 1; i >= 0; i--){
+          let calc = 0;
+          calc = Number(val.charAt(i)) * j;
+
+          if(calc > 9){
+            checksum = checksum + 1;
+            calc = calc - 10;
+          }
+
+          checksum = checksum + calc;
+
+          if(j === 1) {
+              j = 2;
+          }else{
+            j = 1;
+          }
+        }
+        return (checksum % 10) === 0;
+    }
+
+    const validateCardName = name =>{
+        const cardNameRegEx = new RegExp(/^([A-Za-z.\-']+)\s([A-Za-z.\-']+)$/, 'g');
+        let msg = "";
+        if(!cardNameRegEx.test(name)){
+            msg = "Please check the name on the card.";
+        }
+
+        setFormErrors(prevValues => ({...prevValues, name: msg}));
+    
+    };
+
+    const validateCardNumber = number => {
+        let msg = "";
+
+        if(number.trim() === ""){
+            setCardOrg("");
+            msg = "Please provide your credit card number.";
+        }
+
+        if(msg === "" && !hansLuhnAlgo(number) && number.trim() !== ""){
+            setCardOrg("");
+            msg = "Invalid credit card number";
+        }
+        
+        if(msg === "" && cardOrg === "" && number.trim() !== ""){
+            let cardNames = "";
+            for(let [i, card] of Object.entries(cards)){
+                if((cards.length - 1) === Number(i)){
+                    cardNames += "and "
+                }
+                cardNames += card.name;
+                if((cards.length - 1) !== Number(i)){
+                    cardNames += ", ";
+                }else{
+                    cardNames += ".";
+                }
+            }
+            msg = `Unknown card type, we only support ${cardNames}`;
+        }
+
+        setFormErrors(prevValues => ( {...prevValues, number: msg} ));
+    };
+
+    const validateCardExpiryMonth = expiryMonth => {
+        let msg = "";
+        
+        if(expiryMonth === "" || isNaN(Number(expiryMonth))){
+            msg = "Month of expiry required.";
+        }
+
+        if((expiryMonth !== "" ) && ((Number(expiryMonth) < 1) || (Number(expiryMonth) > 12))){
+            msg = "Month is out of range.";
+        }
+
+        setFormErrors(prevValues => ( {...prevValues, expiryMonth: msg} ));
+    };
+
+    const validateCardExpiryYear = expiryYear => {
+        let msg = "";
+        let thisYear = new Date().getFullYear();
+        if(expiryYear === "" || isNaN(Number(expiryYear))){
+            msg = "Year of expiry required";
+        }
+        
+        if((expiryYear !== "" ) && ((Number(expiryYear) < thisYear) || (Number(expiryYear) > (thisYear + 5)))){
+            msg = "Year is out of range.";
+        }
+
+        setFormErrors(prevValues => ( {...prevValues, expiryYear: msg} ));
+    };
+
+    const validateCardCVV = (cvv) => {
+        let msg = "";
+        if(isNaN(Number(cvv)) || cvv.length < 3 || cvv.length > 4){
+            msg = "Check your cvv number";
+        }
+        
+        setFormErrors(prevValues => ( {...prevValues, cvv: msg} ));
+    };
+
+    const handleSubmit = e => {
+        e.preventDefault();
+        validateCardName(cardName);
+        validateCardNumber(cardNumber);
+        validateCardExpiryMonth(cardExpiryMonth);
+        validateCardExpiryYear(cardExpiryYear);
+        validateCardCVV(cardCVV); 
+        setSubmit(true);
+        setNotification({
+            display: false,
+            success: true,
+            msg: ''
+        });
+       
+        
+    };
+
     return (
         <div className="mt-2">
             <div id="form-wrapper" className="animate__animated animate__zoomIn">
@@ -132,8 +332,10 @@ const CreditCardForm = ({setNotification}) => {
                             Name on Card <CgAsterisk className="text-danger mb-2" />
                         </label>
                         <div className="has-validation">
-                            <input id="card-name" type="text" className="form-control" name="name" value={cardName} onChange={setFormCardName}/>
-                            <div className="invalid-feedback"></div>
+                            <input id="card-name" type="text" 
+                            className={`form-control ${(formErrors.name !== '') ? "is-invalid" : ""}`} 
+                            name="name" value={cardName} onChange={setFormCardName}/>
+                            <div className="invalid-feedback">{formErrors.name}</div>
                         </div>
                     </div>
                     <div className="position-relative mb-3 input-group-lg">
@@ -141,10 +343,12 @@ const CreditCardForm = ({setNotification}) => {
                             Card Number <CgAsterisk className="text-danger mb-2"/>
                         </label>
                         <div className="has-validation">
-                            <input id="card-number" type="tel" className="form-control" 
+                            <input id="card-number" type="tel" 
+                            className={`form-control ${(formErrors.number !== '') ? "is-invalid" : ''}`} 
                             value={cardNumber} onChange={setFormCardNumber}/>
-                            <BsFillCreditCard2FrontFill className="position-absolute fs-2 card-input-icon" />
-                            <div className="invalid-feedback"></div>
+                            <BsFillCreditCard2FrontFill 
+                            className={`position-absolute fs-2 ${(formErrors.number !== '') ? "card-input-icon-err": "card-input-icon"}`} />
+                            <div className="invalid-feedback">{formErrors.number}</div>
                         </div>
                     </div>
                     <div className="row mb-3 justify-content-between">
@@ -153,21 +357,25 @@ const CreditCardForm = ({setNotification}) => {
                                 <label htmlFor="" className="form-label">
                                     Expiration Date <CgAsterisk className="text-danger mb-2" />
                                 </label>
-                                <select name="expiry-month" id="expire-month" className="form-select form-select-lg mb-3" value={cardExpiryMonth} 
+                                <select name="expiry-month" id="expire-month" 
+                                className={`form-select form-select-lg mb-3 ${(formErrors.expiryMonth !== '') ? "is-invalid": ''}`}
+                                value={cardExpiryMonth} 
                                 onChange={setFormCardExpiryMonth}>
                                     {monthsOptions()}
                                 </select>
-                                <div className="invalid-feedback"></div>
+                                <div className="invalid-feedback">{formErrors.expiryMonth}</div>
                             </div>
                             <div className="">
                                 <label htmlFor="" className="form-label invisible">
                                     Expiration Date <CgAsterisk className="text-danger mb-2" />
                                 </label>
-                                <select id="expiry-year" name="expiry-year" className="form-select form-select-lg mb-3" value={cardExpiryYear} 
+                                <select id="expiry-year" name="expiry-year" 
+                                className={`form-select form-select-lg mb-3 ${(formErrors.expiryYear !== '') ? "is-invalid": ''}`} 
+                                value={cardExpiryYear} 
                                 onChange={setFormCardExpiryYear}>
                                     {yearOptions(year)}
                                 </select>
-                                <div className="invalid-feedback"></div>
+                                <div className="invalid-feedback">{formErrors.expiryYear}</div>
                             </div>
                         </div>
                         <div className="col-10 col-sm-4 input-group-lg">
@@ -175,13 +383,14 @@ const CreditCardForm = ({setNotification}) => {
                                 Security Code <CgAsterisk className="text-danger mb-2"/>
                             </label>
                             <div className="d-flex has-validation">
-                                <input type="tel" name="cvv" id="cvv" placeholder="cvv" className="form-control form-control-lg"
+                                <input type="tel" name="cvv" id="cvv" placeholder="cvv" 
+                                className={`form-control form-control-lg ${(formErrors.cvv !== '') ? "is-invalid": ''}`}
                                 value={cardCVV} onChange={setFormCardCVV}/>
                                 <span className="cvvtooltip mx-1 align-self-center" data-cvv-tooltip="cvv is a three to four digit number on the back of your card">
                                     <VscQuestion className="fs-4" id="cvvtooltip-icon"/>
                                 </span>
                             </div>
-                            <div className="w-100 mt-1 mb-3 text-danger"></div>
+                            <div className="w-100 mt-1 mb-3 text-danger">{formErrors.cvv}</div>
                         </div>
                     </div>
                     <div className="d-grid gap-2 my-2">

@@ -7,23 +7,22 @@ const useFetch = (url) => {
 
     const abortController = new AbortController();
 
-    const fetchData = async () => {
-        const response = await fetch(url, {signal: abortController.signal});
-
-        if(!response.ok){
-            const msg = `Failed to fetch data: ${response.status}`;
-            throw new Error(msg);
-        }
-
-        const result = await response.json();
-        setData(result);
-        setIsLoading(false);
-        setError(null);
-    };
-
     useEffect(() => { 
-        setTimeout(() => {
-            fetchData()
+        const fetchData = async () => {
+            const response = await fetch(url, {signal: abortController.signal});
+    
+            if(!response.ok){
+                const msg = `Failed to fetch data: ${response.status}`;
+                throw new Error(msg);
+            }
+    
+            const result = await response.json();
+            setData(result);
+            setIsLoading(false);
+            setError(null);
+        };
+        
+        fetchData()
             .catch(err => {
                 if(err.name === "AbortError"){
                     return;
@@ -32,7 +31,6 @@ const useFetch = (url) => {
                 setError(err.message);
                 setIsLoading(false);
             });
-        }, 1000);
 
         return () => abortController.abort();
     }, [url]);
