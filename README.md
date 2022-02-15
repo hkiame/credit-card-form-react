@@ -8,9 +8,19 @@ It includes:
 - automatic card-type detection
 
 ### Dependencies
-1. JSON server was used to simulate request to server. 
+1. Install Dependecies
+```
+    npm install 
+```
+
+2. JSON server was used to simulate request to server. 
+On a new terminal type the below code
 ```
     npx json-server --watch data/data.json --port 4000 
 ```
 
-## Currently under construction
+### Getting started
+on a new terminal type
+```
+    npm start
+```
